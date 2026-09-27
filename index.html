@@ -74,19 +74,13 @@
 <body>
 <div id="stage"></div>
 <aside class="glass" id="sheet">
-  <h2>Footprint</h2>
-  <div class="modes" role="group" aria-label="Footprint">
-    <button type="button" id="mode-fit" aria-pressed="true">260 fit · as drawn</button>
-    <button type="button" id="mode-strict" aria-pressed="false">220 strict</button>
+  <h2>觀察角度</h2>
+  <div class="views" role="group" aria-label="觀察角度">
+    <button type="button" data-view="axon" aria-pressed="true">總覽</button>
+    <button type="button" data-view="desk">書桌</button>
+    <button type="button" data-view="plan">俯視</button>
   </div>
-  <p class="note" id="mode-note"></p>
   <svg class="plan" id="plan" role="img" aria-label="Dimensioned plan"></svg>
-  <h2>Views</h2>
-  <div class="views" role="group" aria-label="Camera">
-    <button type="button" data-view="axon" aria-pressed="true">Overview</button>
-    <button type="button" data-view="desk">Desk</button>
-    <button type="button" data-view="plan">Plan</button>
-  </div>
   <h2>Schedule</h2>
   <table id="schedule"></table>
   <p id="audit"></p>
@@ -309,9 +303,8 @@ window.addEventListener("error", (ev) => {
     addWindowBedDrawers(content, L);
 
     // Mattresses inset so the stone and oak rim stay visible.
-    const loftTop = 134;
-    const nm = { x: 4, y: loftTop, z: 3, w: L.north.w - 8, h: 14, d: L.screen.z - 4 };
-    addLoftBed(content, L, loftTop);
+    const nm = { x: 4, y: L.sillH, z: 3, w: L.north.w - 8, h: 14, d: L.screen.z - 4 };
+    addWardrobeBedDrawers(content, L);
     const wm = { x: 4, y: L.sillH, z: L.west.z + 2, w: L.west.w - 8, h: 14, d: L.west.d - 6 };
     addBox(content, nm.x, nm.y, nm.z, nm.w, nm.h, nm.d, mat.linen, "mattress-n");
     addBox(content, wm.x, wm.y, wm.z, wm.w, wm.h, wm.d, mat.linen, "mattress-w");
@@ -395,33 +388,29 @@ window.addEventListener("error", (ev) => {
     }
   }
 
-  function addLoftBed(content, L, loftTop) {
-    const deckH = 10;
-    const deckZ = 2;
-    const deckD = L.screen.z - 4;
-    addBox(content, 0, loftTop - deckH, deckZ, L.north.w, deckH, deckD, mat.oak, "loft-deck");
-    // Cheek on the sill, so the deck is carried at the window.
-    addBox(content, 34, L.sillH, 8, 8, loftTop - deckH - L.sillH, 74, mat.oak, "loft-cheek");
-    // Drawer cabinet between the sill and the ladder.
-    const cab = { x: 46, z: 8, w: 86, d: 74 };
-    addBox(content, cab.x, 4, cab.z, cab.w, 6, cab.d, mat.oak, "loft-base");
-    addBox(content, cab.x, 10, cab.z, 4, loftTop - deckH - 10, cab.d, mat.oak, "loft-stile");
-    addBox(content, cab.x + cab.w - 4, 10, cab.z, 4, loftTop - deckH - 10, cab.d, mat.oak, "loft-stile");
-    addBox(content, cab.x + cab.w / 2 - 2, 10, cab.z + 4, 4, loftTop - deckH - 16, cab.d - 8, mat.oak, "loft-div");
-    const colW = cab.w / 2 - 14;
-    [10, 48, 86].forEach((yy) => {
-      [cab.x + 6, cab.x + cab.w / 2 + 4].forEach((xx) => {
-        addBox(content, xx, yy, cab.z + cab.d - 4, colW, 30, 3.5, mat.drawer, "drawer");
-        addBox(content, xx + colW / 2 - 3.5, yy + 13, cab.z + cab.d - 1, 7, 2.2, 1.4, mat.oakDark, "pull");
-      });
-    });
-    // Embedded ladder at the wardrobe end. Lower treads reach further out.
-    addBox(content, 136, 4, 24, 4, loftTop - deckH - 4, 72, mat.oak, "ladder-side");
-    addBox(content, 182, 4, 24, 4, loftTop - deckH - 4, 72, mat.oak, "ladder-side");
-    [14, 42, 70, 98].forEach((yy, i) => {
-      const d = 48 - i * 8;
-      addBox(content, 140, yy, 98 - d, 42, 3.4, d, mat.oak, "ladder-step");
-    });
+  function addWardrobeBedDrawers(content, L) {
+    const top = L.sillH;
+    const x0 = L.sillD;
+    const w = L.north.w - x0;
+    const z0 = 4;
+    const depth = L.screen.z - 4 - z0;
+    addBox(content, x0, top - 8, z0, w, 8, depth, mat.oak, "north-top");
+    addBox(content, x0, 8, z0 + 4, 4, top - 16, depth - 8, mat.oak, "north-back");
+    addBox(content, x0, 8, z0, 4, top - 16, 4, mat.oak, "north-end");
+    addBox(content, x0 + w - 4, 8, z0, 4, top - 16, depth, mat.oak, "north-end");
+    const run = w - 16;
+    const start = x0 + 8;
+    addBox(content, start, 0, z0 + 2, run, 6, depth - 8, mat.toe, "north-toe");
+    const count = 3;
+    const gap = 3;
+    const dw = (run - gap * (count + 1)) / count;
+    const dh = top - 18;
+    const face = z0 + depth;
+    for (let i = 0; i < count; i++) {
+      const xx = start + gap + i * (dw + gap);
+      addBox(content, xx, 8, face - 3.6, dw, dh, 3.2, mat.drawer, "north-drawer");
+      addBox(content, xx + dw / 2 - 5, 8 + dh / 2 - 1.2, face - 0.6, 10, 2.4, 1.2, mat.oakDark, "north-pull");
+    }
   }
 
   function addTable(T, L, index) {
@@ -700,14 +689,11 @@ window.addEventListener("error", (ev) => {
   }
 
   function fillSheet(L, clashes) {
-    document.getElementById("mode-note").textContent = L.strict
-      ? "The door is at the far end of a 90 cm corridor off the entry wall, 70 cm from the north wall. A 190 cm mattress on the window wall is 2 cm longer than the 188 cm clear run."
-      : "The door is at the far end of a 90 cm corridor, matching the recess on the plan. The opening into that corridor starts 70 cm from the north wall and is 70 cm wide.";
     const rows = [
       ["Room, clear", L.roomX + " × " + L.roomZ + " × " + L.roomY],
       ["Big window sill", "40 deep × 60 high, full 280"],
       ["Tall window", (L.tall.x1 - L.tall.x0) + " wide, sill 60, head " + L.tall.head],
-      ["North bed", "190 × 92 loft, deck at 134, drawers and ladder"],
+      ["North bed", "190 × 92 at sill height, three drawers under"],
       ["Window bed", "92 × " + L.west.d + ", three drawers under the sill"],
       ["Partition, beds", L.screen.w + " long × 4 thick, to " + (L.screen.y + L.screen.h)],
       ["到頂衣櫃", L.robe.w + " × " + L.robe.d + " × " + L.robe.h],
@@ -727,8 +713,6 @@ window.addEventListener("error", (ev) => {
       auditEl.textContent = "Fit check: furniture stays inside the clear room without overlapping.";
     }
     drawPlan(L);
-    document.getElementById("mode-fit").setAttribute("aria-pressed", L.strict ? "false" : "true");
-    document.getElementById("mode-strict").setAttribute("aria-pressed", L.strict ? "true" : "false");
   }
 
   function resize() {
@@ -752,8 +736,6 @@ window.addEventListener("error", (ev) => {
     renderer.render(scene, camera);
   }
 
-  document.getElementById("mode-fit").addEventListener("click", () => applyMode("fit"));
-  document.getElementById("mode-strict").addEventListener("click", () => applyMode("strict"));
   document.querySelectorAll("[data-view]").forEach((btn) => {
     btn.addEventListener("click", () => setView(btn.dataset.view));
   });
